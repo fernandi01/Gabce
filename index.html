@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Graduation Flipbook</title>
+    <style>
+        :root {
+            --primary-color: #f8c8dc;
+            --secondary-color: #d4a5c8;
+            --accent-color: #d7b9d5;
+            --text-color: #5a3d5c;
+            --page-color: #fff9fc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Playfair Display', serif;
+            background: linear-gradient(135deg, #f4e3e9 0%, #e9d7e0 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1500px;
+            color: var(--text-color);
+            overflow-x: hidden;
+        }
+
+        .book-container {
+            position: relative;
+            width: 90%;
+            max-width: 800px;
+            height: 90vh;
+            margin: 2rem auto;
+        }
+
+        .book {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transform: rotateX(10deg);
+            transition: transform 0.5s ease;
+        }
+
+        .page {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background: var(--page-color);
+            border-radius: 5px 15px 15px 5px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transform-origin: left center;
+            transition: transform 1s ease;
+            transform-style: preserve-3d;
+            padding: 2rem;
+            backface-visibility: hidden;
+            border: 1px solid rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+              pointer-events: none; /* halaman tidak menutupi klik */
+        }
+
+        .page::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 10px;
+            width: 30px;
+            height: 100%;
+            background: linear-gradient(to right, rgba(0,0,0,0.05) 0%, transparent 100%);
+            z-index: 10;
+        }
+
+        .page.active {
+  pointer-events: auto; /* halaman yang aktif bisa menerima klik */
+}
+
+
+        .page-content {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            z-index: 1;
+            padding: 2rem;
+            overflow: hidden;
+        }
+
+        .cover {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .cover h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            color: white;
+        }
+
+        .cover p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            color: white;
+            font-style: italic;
+        }
+
+        .page-number {
+            position: absolute;
+            bottom: 10px;
+            right: 20px;
+            font-size: 0.8rem;
+            color: rgba(0,0,0,0.3);
+        }
+
+        .message {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .image-container {
+            margin: 1.5rem 0;
+            width: 80%;
+            max-height: 350px;
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .image-container:hover img {
+            transform: scale(1.05);
+        }
+
+        .decoration {
+            position: absolute;
+            opacity: 0.2;
+            z-index: 0;
+        }
+
+        .btn {
+            position: absolute;
+            top: 50%;
+            width: 50px;
+            height: 50px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            z-index: 100;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            border: none;
+            outline: none;
+            pointer-events: auto; /* tombol bisa diklik */
+  z-index: 100; /* pastikan di atas halaman */
+        }
+
+        .btn.prev {
+            left: 10px;
+            transform: translateY(-50%) rotate(180deg);
+        }
+
+        .btn.next {
+            right: 10px;
+            transform: translateY(-50%);
+        }
+
+        .btn:hover {
+            background: var(--secondary-color);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .corner-decoration {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path fill="%23d4a5c8" d="M0,0 C20,10 30,30 10,50 C30,70 40,90 60,100 L0,100 Z"/></svg>');
+            background-repeat: no-repeat;
+            opacity: 0.3;
+        }
+
+        .top-left {
+            top: 0;
+            left: 0;
+        }
+
+        .top-right {
+            top: 0;
+            right: 0;
+            transform: rotate(90deg);
+        }
+
+        .bottom-left {
+            bottom: 0;
+            left: 0;
+            transform: rotate(270deg);
+        }
+
+        .bottom-right {
+            bottom: 0;
+            right: 0;
+            transform: rotate(180deg);
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: var(--primary-color);
+            opacity: 0.7;
+            animation: confetti-fall 5s linear infinite;
+        }
+
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Add multiple confetti with different delays */
+        .confetti:nth-child(1) { left: 10%; animation-delay: 0s; background-color: #f8c8dc; }
+        .confetti:nth-child(2) { left: 20%; animation-delay: 1s; background-color: #d4a5c8; }
+        .confetti:nth-child(3) { left: 30%; animation-delay: 2s; background-color: #d7b9d5; }
+        .confetti:nth-child(4) { left: 40%; animation-delay: 0.5s; background-color: #e8c4d9; }
+        .confetti:nth-child(5) { left: 50%; animation-delay: 1.5s; background-color: #dfb3d3; }
+        .confetti:nth-child(6) { left: 60%; animation-delay: 0.8s; background-color: #e6bfdc; }
+        .confetti:nth-child(7) { left: 70%; animation-delay: 2.5s; background-color: #d9aacb; }
+        .confetti:nth-child(8) { left: 80%; animation-delay: 1.2s; background-color: #e2b8d8; }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="book-container">
+        <!-- Confetti decorations -->
+        <div class="confetti"></div>
+        <div class="confetti"></div>
+        <div class="confetti"></div>
+        <div class="confetti"></div>
+        <div class="confetti"></div>
+        <div class="confetti"></div>
+        <div class="confetti"></div>
+        <div class="confetti"></div>
+
+        <div class="book" id="book">
+            <!-- Cover Page -->
+            <div class="page cover" id="page0">
+                <div class="corner-decoration top-left"></div>
+                <div class="corner-decoration top-right"></div>
+                <div class="corner-decoration bottom-left"></div>
+                <div class="corner-decoration bottom-right"></div>
+                
+                <h1>Happy Graduation!</h1>
+                <p>A Celebration of Your Amazing Journey</p>
+                
+                <div class="image-container" style="width: 70%; margin: 2rem 0;">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/71477642-d7cf-4c50-9058-0923094dd41c.png" alt="Graduation cap and diploma on a wooden table with pink roses scattered around" />
+                </div>
+                
+                <p style="font-family: 'Dancing Script', cursive; font-size: 1.5rem; margin-top: 1rem;">
+                    Flip through this book to see something special
+                </p>
+                <div class="page-number">Cover</div>
+            </div>
+
+            <!-- Page 1 -->
+            <div class="page" id="page1">
+                <div class="page-content">
+                    <h2 style="font-family: 'Dancing Script', cursive;">Giels</h2>
+                    
+                    <div class="image-container">
+                        <img src="image/Gabce1.jpg" alt="Graduation cap flying with scroll diploma unfurling behind against soft pink background" />
+                    </div>
+                    
+                    <div class="message">
+                        <p>Congraduation I. J. Gabriele S. I. Kom.
+                            Selamat menikmati masa indah sesaat wkwkwk dan selamat datang di masa perbudakan modern.
+                            Sambil liburan, sambil cari lowongan customer service kedutaan ya WKWKWKWK
+                        </p>
+                    </div>
+                    <div class="page-number">1</div>
+                </div>
+            </div>
+
+            <!-- Page 2 -->
+            <div class="page" id="page2">
+                <div class="page-content">
+                    <h2 style="font-family: 'Dancing Script', cursive;">ita</h2>
+                    
+                    <div class="image-container">
+                        <img src="image/ita arthur.png" alt="Group of friends laughing together at graduation ceremony with golden tassels flying" />
+                    </div>
+                    
+                    <div class="message">
+                        <p>Selamat selimit S.I.Kom gabcee!!
+Jangan lupa lunasin utang tidur & gizi sebelum digeprek di dunia kerjaa wkwkwkwk
+Mangatss mencari cuan
+</p>
+                    </div>
+                    <div class="page-number">2</div>
+                </div>
+            </div>
+
+            <!-- Page 3 -->
+            <div class="page" id="page3">
+                <div class="page-content">
+                    <h2 style="font-family: 'Dancing Script', cursive;">Monnn</h2>
+                    
+                    <div class="image-container">
+                        <img src="image/Gabce_mon3.jpg" alt="Graduate in cap and gown smiling with family in golden sunset light" />
+                    </div>
+                    
+                    <div class="message">
+                        <p>celimittttt S.I.Kom Gabyyyyyyyyy!!
+selamat menikmati dunia perbudakan :D
+btw tlg rajin" dan aktif" di TIM MULA yaaaaaaaa🙏🏻
+</p>
+                    </div>
+                    <div class="page-number">3</div>
+                </div>
+            </div>
+
+            <!-- Page 4 -->
+            <div class="page" id="page4">
+                <div class="page-content">
+                    <h2 style="font-family: 'Dancing Script', cursive;">Wo</h2>
+                    
+                    <div class="image-container">
+                        <img src="image/wo.jpg" alt="Abstract illustration of graduation cap flying toward starry sky with glitter trail" />
+                    </div>
+                    
+                    <div class="message">
+                        <p>Syelamat Gelarr baruu Gabbyy S.I.Kom & Syelamat menyongsong kerasnya kehidupan untuk mencari sesuap nasi wkwkwk ....
+Wish You all the best N God Bless You!!!
+</p>
+                    </div>
+                    <div class="page-number">4</div>
+                </div>
+            </div>
+
+            <!-- Page 5 -->
+            <div class="page" id="page5">
+                <div class="page-content">
+                    <h2 style="font-family: 'Dancing Script', cursive;">Abi</h2>
+                    
+                    <div class="image-container">
+                        <img src="image/Gabce_abi.jpg" alt="Close-up of graduation cap with 'Class of 2023' tag hanging from it on pink satin" />
+                    </div>
+                    
+                    <div class="message">
+                        <p>uye happy gradu ci gabb!! akhirnya skripsinya ga di bawa kemana2 lagii. taro skripsinya dan welcome to the new life yaa. wish you all the best and gudluckkk!!</p>
+                    </div>
+                    <div class="page-number">5</div>
+                </div>
+            </div>
+
+            <!-- Page 6 -->
+            <div class="page" id="page6">
+                <div class="page-content">
+                    <h2 style="font-family: 'Dancing Script', cursive;">Ricky</h2>
+                    
+                    <div class="image-container">
+                        <img src="image/ricky.jpg" alt="Study desk at night with coffee cup, open books and graduation-themed planner" />
+                    </div>
+                    
+                    <div class="message">
+                        <p>Makan kornets keselek bom</p>
+<p>Congratss Gabce S.I. Kom.
+Selamat lulus tutorial semoga stressnya tetap aman amin 🙏
+</p>
+                    </div>
+                    <div class="page-number">6</div>
+                </div>
+            </div>
+
+            <!-- Page 7 -->
+            <div class="page" id="page7">
+                <div class="page-content">
+                    <h2 style="font-family: 'Dancing Script', cursive;">Agnes</h2>
+                    
+                    <div class="image-container">
+                        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/7579a11d-ab51-41d5-946a-198bf79c5d0c.png" alt="Graduation gown shimmering with sequins in soft focus with bokeh lights" />
+                    </div>
+                    
+                    <div class="message">
+                        <p>happy graduate gabcekk, pergunakan gelarnya buat cari loker!! kalo ada loker yg gajinya lebih gede dari bosnya boleh info gue ya 😭🤙🏻 𝗚𝗢𝗢𝗗𝗟𝗨𝗖𝗞</p>
+                    </div>
+                    <div class="page-number">7</div>
+                </div>
+            </div>
+
+            <!-- Page 8 -->
+            <div class="page" id="page8">
+                <div class="page-content">
+                    <h2 style="font-family: 'Dancing Script', cursive;">Gisel</h2>
+                    
+                    <div class="image-container">
+                        <img src="image/Gabce_gisel.jpg" alt="Graduate surrounded by family and friends in heartfelt group hug against soft blurred background" />
+                    </div>
+                    
+                    <div class="message">
+                        <p>hepiihepihepi graduation gabb! so proud of youu! selamat dan semangat memasuki rill life yang rill banget poll ini:)
+tapi sebelum itu mari nikmati tidur dan liburan dulu :D you deserve it! God bless selalu ya kedepannya loveyuu🥳❤🕺🏻
+</p>
+                    </div>
+                    <div class="page-number">8</div>
+                </div>
+            </div>
+
+            <!-- Page 9 -->
+            <div class="page" id="page9">
+                <div class="page-content">
+                    <h2 style="font-family: 'Dancing Script', cursive;">Velina</h2>
+                    
+                    <div class="image-container">
+                        <img src="image/Gabce_Velina.jpg" alt="Silhouette of graduate standing at sunrise looking toward distant golden horizon" />
+                    </div>
+                    
+                    <div class="message">
+                        <p>OIII CONGRATSSSSS !!!!!!!! 🥳🥳
+KEWRENN UD LULUS AKHIRNYA YAKKKKK !
+Selamat memasuki dunia #InfoLoker HAHAHAHA..... Jangan lupa revisian dikerjain weeee
+Jangan stress" lagiiii ud kelar kuliahhhhh istirahat dlu liburannnnnnnn GOD BLESS UUUUU GABYYY 😍
+</p>
+                    </div>
+                    <div class="page-number">9</div>
+                </div>
+            </div>
+
+            <!-- Page 10 (Halfway point) -->
+            <div class="page" id="page10">
+                <div class="page-content">
+                    <h2 style="font-family: 'Dancing Script', cursive;">Arthur</h2>
+                    
+                    <div class="image-container">
+                        <img src="image/ita arthur.png" alt="Gold star trophy with graduation cap on top surrounded by pink rose petals" />
+                    </div>
+                    
+                    <div class="message">
+                        <p>Congrat Gabce S.I.Kom, sudah menyelesaikan perjalanan nya menempuh gelar, selamat menikmati liburan sesaat nya sebelum dunia kerja datang melanda 😁
+</p>
+                    </div>
+                    <div class="page-number">10</div>
+                </div>
+            </div>
+
+            <!-- Page 11 -->
+            <div class="page" id="page11">
+                <div class="page-content">
+                    <h2 style="font-family: 'Dancing Script', cursive;">Gabco</h2>
+                    
+                    <div class="image-container">
+                        <img src="image/Gabce_gabco2.jpg" alt="Abstract watercolor of strong feminine figure in cap and gown with glowing aura" />
+                    </div>
+                    
+                    <div class="message">
+                        <p>Selamatt I. J. Gabriele S. I. Kom. Semangat terus Gebbbb! Lulus bukan akhir, tapi awal dari bab baru yang (semoga) nggak sekejam dosen pas bimbingan 😌</p>
+<p>GOD BLESS YOU ALWAYS 💛</p>
+                    </div>
+                    <div class="page-number">11</div>
+                </div>
+            </div>
+
+            <!-- Page 12 -->
+            <div class="page" id="page12">
+                <div class="page-content">
+                    <h2 style="font-family: 'Dancing Script', cursive;">Kelvin</h2>
+                    
+                    <div class="image-container">
+                        <img src="image/avel kelvin2.jpg" alt="Festive graduation party with pink and gold balloons rising in background" />
+                    </div>
+                    
+                    <div class="message">
+                        <p>congrats Gabce sukses terus🫡
+</p>
+                    </div>
+                    <div class="page-number">12</div>
+                </div>
+            </div>
+
+            <!-- Page 13 -->
+            <div class="page" id="page13">
+                <div class="page-content">
+                    <h2 style="font-family: 'Dancing Script', cursive;">Avel</h2>
+                    
+                    <div class="image-container">
+                        <img src="image/avel kelvin2.jpg" alt="Graduate walking confidently down flowery path toward future opportunities" />
+                    </div>
+                    
+                    <div class="message">
+                        <p>Selamat atas pencapaian I. J. Gabriele menjadi I. J. Gabriele S. I. 
+Selamat menempuh hidup kejenjang yg lebih baru (dunia kerja) gab tetap semangat dan selalu mengandalkan tuhan dalam segala sesuatu 
+GBU 😇 🤍
+</p>
+                    </div>
+                    <div class="page-number">13</div>
+                </div>
+            </div>
+
+            <!-- Page 14 -->
+            <div class="page" id="page14">
+                <div class="page-content">
+                    <h2 style="font-family: 'Dancing Script', cursive;">Freya & Jojo</h2>
+                    
+                    <div class="image-container">
+                        <img src="image/Screenshot 2025-07-23 182031.png" alt="Vintage golden key sitting on open book with rose petals scattered around" />
+                    </div>
+                    
+                    <div class="message">
+                        <p>SELAMAT S.I.KOM GABBBYYYYYYYY. Selamat menghadapi pencarian loker dan komen2 ganas "udah lulus nih, kapan nikah?". Tapi skrg masih dikasih waktu buat hibernasi dl kok gabb, monggo bales dendam tidur, gaplok aja yg suka spam2 chat proker2 itu lolz ❤</p>
+                    </div>
+                    <div class="page-number">14</div>
+                </div>
+            </div>
+
+          
+
+            <!-- Page 19 (Back Cover) -->
+<div class="page cover" id="page19">
+  <div class="corner-decoration top-left"></div>
+  <div class="corner-decoration top-right"></div>
+  <div class="corner-decoration bottom-left"></div>
+  <div class="corner-decoration bottom-right"></div>
+  
+  <h1>Congratulations!</h1>
+  <p>May your future be as bright as your smile today</p>
+
+  <div class="message">
+    <p>As we near the end of this book, we hope you'll look back on your journey with pride and forward with excitement. The best is yet to come!</p>
+  </div>
+
+  <div class="image-container" style="width: 80%; margin: 1.5rem 0;">
+    <img src="image/geb - Copy.png" alt="Silhouette of graduate tossing cap into vibrant sunset sky filled with golden light" />
+  </div>
+  
+  <div style="font-family: 'Dancing Script', cursive; font-size: 1.8rem; margin-top: 1rem;">
+    With love and pride,<br>All who believe in you
+  </div>
+
+  <div class="page-number">19</div>
+</div>
+
+                    
+
+                                        <!-- LINK RUSAH -->
+
+             <!-- Page 20 (Back Cover) -->
+            <div class="page cover" id="page20">
+                <div class="corner-decoration top-left"></div>
+                <div class="corner-decoration top-right"></div>
+                <div class="corner-decoration bottom-left"></div>
+                <div class="corner-decoration bottom-right"></div>
+                
+                <h1>Congratulations!</h1>
+                <p>May your future be as bright as your smile today</p>
+
+            
+                    <div class="message">
+                        <p>As we near the end of this book, we hope you'll look back on your journey with pride and forward with excitement. The best is yet to come!</p>
+                    </div>
+                    <div class="page-number">19</div>
+                </div>
+            </div>          
+        </div>
+
+        <button class="btn prev" id="prevBtn" disabled>❯</button>
+        <button class="btn next" id="nextBtn">❯</button>
+    </div>
+
+   <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const book = document.getElementById('book');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const pages = document.querySelectorAll('.page');
+    
+    let currentPage = 0;
+    const totalPages = pages.length;
+    
+    prevBtn.disabled = false;
+nextBtn.disabled = false;
+
+    
+    // Initialize - hide all pages except first
+    pages.forEach((page, index) => {
+        if (index !== 0) {
+            page.style.transform = 'rotateY(180deg)';
+            page.style.zIndex = totalPages - index;
+        } else {
+            page.style.zIndex = totalPages;
+        }
+    });
+    
+    // Next button functionality
+    nextBtn.addEventListener('click', () => {
+        if (currentPage < totalPages - 1) {
+            // Flip current page
+            pages[currentPage].style.transform = 'rotateY(-180deg)';
+            pages[currentPage].style.zIndex = totalPages - currentPage;
+
+            // Show next page
+            currentPage++;
+            pages[currentPage].style.transform = 'rotateY(0deg)';
+            pages[currentPage].style.zIndex = totalPages;
+        }
+    });
+
+    // Previous button functionality
+   prevBtn.addEventListener('click', () => {
+    if (currentPage > 0) {
+        pages[currentPage].style.transform = 'rotateY(180deg)';
+        pages[currentPage].style.zIndex = totalPages - currentPage;
+
+        currentPage--;
+        pages[currentPage].style.transform = 'rotateY(0deg)';
+        pages[currentPage].style.zIndex = totalPages;
+
+        // Update active class
+        pages.forEach((page, index) => {
+          if (index === currentPage) page.classList.add('active');
+          else page.classList.remove('active');
+        });
+    }
+});
+
+
+    // Touch and mouse drag support
+    let startX, endX;
+    book.addEventListener('touchstart', handleTouchStart, {passive: true});
+    book.addEventListener('touchend', handleTouchEnd);
+    book.addEventListener('mousedown', handleMouseStart);
+    book.addEventListener('mouseup', handleMouseEnd);
+
+    function handleTouchStart(e) {
+        startX = e.touches[0].clientX;
+    }
+
+    function handleTouchEnd(e) {
+        endX = e.changedTouches[0].clientX;
+        handleSwipe();
+    }
+
+    function handleMouseStart(e) {
+        startX = e.clientX;
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseEnd);
+    }
+
+    function handleMouseMove(e) {
+        endX = e.clientX;
+    }
+
+    function handleMouseEnd() {
+        handleSwipe();
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseEnd);
+    }
+
+    function handleSwipe() {
+        if (startX - endX > 50 && currentPage < totalPages - 1) {
+            nextBtn.click();
+        } else if (endX - startX > 50 && currentPage > 0) {
+            prevBtn.click();
+        }
+    }
+
+    // Keyboard support
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowRight' && currentPage < totalPages - 1) {
+            nextBtn.click();
+        } else if (e.key === 'ArrowLeft' && currentPage > 0) {
+            prevBtn.click();
+        }
+    });
+
+    // Add some confetti for celebration
+    function createConfetti() {
+        for (let i = 0; i < 50; i++) {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            confetti.style.left = Math.random() * 100 + 'vw';
+            confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+            confetti.style.animationDelay = Math.random() + 's';
+            confetti.style.backgroundColor = `hsl(${Math.random() * 60 + 300}, 100%, ${Math.random() * 30 + 70}%)`;
+            document.body.appendChild(confetti);
+            
+            setTimeout(() => {
+                confetti.remove();
+            }, 5000);
+        }
+    }
+
+    // Auto-trigger confetti on last page when reached
+    const observer = new MutationObserver(function(mutations) {
+        if (currentPage === totalPages - 1) {
+            createConfetti();
+        }
+    });
+
+    observer.observe(document.body, { attributes: true, childList: true, subtree: true });
+});
+</script>
+
+</body>
+</html>
+
